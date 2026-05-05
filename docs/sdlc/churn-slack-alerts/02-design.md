@@ -460,7 +460,7 @@ sequenceDiagram
 
   Tara->>UI: Click "Connect Slack"
   UI->>API: GET /v1/slack/oauth/start (JWT)
-  API->>API: verify role=tenant_admin; mint signed state
+  API->>API: verify role=tenant_admin, mint signed state
   API-->>UI: 302 slack.com/oauth/v2/authorize?...&state=...
   UI->>Slack: redirect
   Tara->>Slack: approve scopes
@@ -492,13 +492,13 @@ sequenceDiagram
   participant KMS
   participant Slack
 
-  Score->>PG: INSERT score rows for run_id=R; UPDATE score_run.completed_at
+  Score->>PG: INSERT score rows for run_id=R, UPDATE score_run.completed_at
   Score->>Q: enqueue churn.score_run.completed { tenant_id, run_id, is_backfill }
   Detector->>Q: consume
   alt is_backfill = true
     Detector-->>Q: ack (no-op)
   else is_backfill = false
-    Detector->>PG: SELECT crossings (new>=0.8 AND prior<0.8) WHERE run_id=R
+    Detector->>PG: SELECT crossings where new at least 0.8 and prior below 0.8 for run_id=R
     loop per crossing
       Detector->>Q: add slack.alert { jobId = tenant:account:run_id }
       Note over Q: jobId collision = idempotent skip
@@ -514,8 +514,8 @@ sequenceDiagram
     alt key already existed AND not is_test
       Disp->>PG: audit (suppressed, reason=cooldown)
     else key set
-      Disp->>R: ZADD slack:burst:{tenant}; ZREMRANGEBYSCORE > now-3600
-      alt count > 50
+      Disp->>R: ZADD slack:burst:{tenant}, ZREMRANGEBYSCORE older than now-3600
+      alt count above 50
         Disp->>PG: audit (suppressed, reason=tenant_burst_cap)
       else within cap
         Disp->>PG: SELECT slack_connection, default channel, matching rule
@@ -524,7 +524,7 @@ sequenceDiagram
         else active
           Disp->>KMS: Decrypt(encrypted_dek)
           KMS-->>Disp: plaintext_dek
-          Disp->>Disp: AES-GCM decrypt token; render payload via allowlist
+          Disp->>Disp: AES-GCM decrypt token, render payload via allowlist
           Disp->>Slack: chat.postMessage
           alt 200 ok
             Slack-->>Disp: { ok:true, ts }
