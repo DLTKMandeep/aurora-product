@@ -32,14 +32,14 @@ flowchart LR
     NextUI[Next.js Settings UI]
   end
 
-  subgraph Aurora API [Fastify 4 — ECS Fargate]
+  subgraph AuroraAPI [Fastify 4 — ECS Fargate]
     OAuthH[slack/oauth handlers]
     RoutingH[slack/routing handlers]
     AuditH[slack/audit handlers]
     TestH[slack/test-alert handler]
   end
 
-  subgraph Aurora Worker [BullMQ — ECS Fargate]
+  subgraph AuroraWorker [BullMQ — ECS Fargate]
     Detector[churn/crossing-detector]
     Dispatcher[slack/dispatcher]
   end
@@ -82,8 +82,8 @@ flowchart LR
 
   OAuthH -.flag check.-> LD
   Dispatcher -.flag check.-> LD
-  Aurora API -.metrics/logs.-> DD
-  Aurora Worker -.metrics/logs.-> DD
+  AuroraAPI -.metrics/logs.-> DD
+  AuroraWorker -.metrics/logs.-> DD
   OAuthH -.fetch creds.-> SM
 ```
 
