@@ -532,9 +532,9 @@ sequenceDiagram
           else 429
             Slack-->>Disp: Retry-After: N
             Disp->>Q: backoff retry (≤ 5)
-          else token_revoked / account_inactive
+          else token_revoked or account_inactive
             Disp->>PG: UPDATE slack_connection SET status='needs_reconnect'
-            Disp->>PG: audit (failed, reason=<code>)
+            Disp->>PG: audit (failed, reason=[code])
           end
         end
       end
