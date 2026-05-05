@@ -1,0 +1,87 @@
+# sevaai-sdlc configuration for Aurora.
+# This file customizes the skill pack to your project's stack and conventions.
+
+project_name: aurora
+output_dir: docs/sdlc
+
+# Push artifacts to your real tooling (each block is OPT-IN).
+# The skill asks before pushing. Set enabled=false to disable.
+trackers:
+  jira:
+    enabled: true
+    site: dltk-starpoint.atlassian.net   # Atlassian Cloud site
+    project_key: SDLCTEST                # Jira Core project
+    # Available issue types in this project: Task, Story, Workstream.
+    # We use Workstream as the feature-level parent (Epic equivalent) and
+    # Story for each user-story from the requirements artifact.
+    epic_issue_type: Workstream
+    story_issue_type: Story
+    confluence_space: ""                 # leave empty unless you also want PRDs in Confluence
+  notion:
+    enabled: false
+    prds_database_id: ""
+  github:
+    enabled: false
+    issues_repo: ""
+
+stack:
+  language: TypeScript (Node 20)
+  api_framework: Fastify 4
+  database: Postgres 16 (RDS, schema-per-tenant)
+  cache: Redis 7 (ElastiCache)
+  queue: BullMQ
+  frontend: Next.js 14 (separate repo)
+  cloud: AWS
+  orchestrator: ECS Fargate (production); EKS (internal services)
+
+auth:
+  user: Auth0 OIDC (planned) + email/password fallback during transition
+  service_to_service: mTLS via SPIFFE
+  session: JWT with 1h access + 30d refresh
+
+compliance:
+  - SOC 2 Type II (in audit window)
+  - GDPR
+  - HIPAA-readiness target FY27
+
+flag_provider: LaunchDarkly
+
+observability:
+  apm: Datadog
+  errors: Sentry
+  paging: PagerDuty
+  logs: Datadog Logs
+  rum: Datadog RUM
+
+security_tools:
+  sast: Semgrep + Snyk Code
+  sca: Snyk Open Source + Dependabot
+  secrets: GitGuardian + GitHub secret scanning
+  threat_modeling: IriusRisk
+  container: Trivy
+
+release:
+  default_rollout: "1% / 1h -> 10% / 4h -> 50% / 8h -> 100%"
+  no_deploy_windows: ["Fri >= 14:00 ET", "Sat", "Sun", "US public holidays"]
+  approver: "Eng lead + SRE on-call"
+  ci: GitHub Actions
+  cd: Argo CD
+
+# Per-stage overrides — leave empty to inherit defaults from the plugin.
+stages:
+  requirements: {}
+  design:       {}
+  development:  {}
+  testing:      {}
+  security:     {}
+  deployment:   {}
+  maintenance:  {}
+
+# Free-text context injected into every system prompt.
+project_context: |
+  Aurora is multi-tenant. Every feature must respect tenant isolation. PII
+  belongs only in the customer-data services and must never leak into worker
+  logs or metrics. Auth-touching changes require IriusRisk threat-model entry
+  and SOC 2 evidence collection. We are pre-Series-B; engineering velocity
+  matters but we will not ship anything that materially raises SOC 2 or GDPR
+  audit risk.

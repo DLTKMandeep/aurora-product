@@ -1,0 +1,23 @@
+# Node / build
+node_modules/
+dist/
+build/
+.npm/
+*.log
+npm-debug.log*
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# Lock files (keep package-lock.json or pnpm-lock.yaml as appropriate; remove this line if you want to commit them)
